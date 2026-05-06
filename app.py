@@ -152,29 +152,6 @@ st.markdown("""
         color: inherit;
         opacity: 0.75;
     }
-
-    /* ── Marco teórico ── */
-    .marco-teorico {
-        font-family: 'Source Serif 4', 'Georgia', serif;
-        font-size: 1.08rem;
-        line-height: 1.80;
-        color: inherit;
-    }
-    .marco-teorico .variable {
-        font-family: 'STIX Two Text', serif;
-        font-style: italic;
-        font-weight: 500;
-    }
-    .ref-biblio {
-        font-family: 'Source Serif 4', serif;
-        font-size: 0.88rem;
-        font-style: italic;
-        border-top: 1px solid rgba(128,128,128,0.3);
-        margin-top: 2rem;
-        padding-top: 1rem;
-        color: inherit;
-        opacity: 0.8;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -197,7 +174,7 @@ PRESETS = {
         "densidad": 1060
     },
     "Arteriosclerosis severa": {
-        "r_mm": 1.5, # Ajustado a 1.5 base para mostrar la oclusión del 55%
+        "r_mm": 1.5,
         "delta_P": 2600,
         "L_cm": 10.0,
         "viscosidad": 0.0048,
@@ -205,7 +182,7 @@ PRESETS = {
         "densidad": 1065
     },
     "Oclusión crítica": {
-        "r_mm": 1.5, # Ajustado a 1.5 base para mostrar la oclusión del 90%
+        "r_mm": 1.5,
         "delta_P": 3500,
         "L_cm": 10.0,
         "viscosidad": 0.0050,
@@ -214,10 +191,7 @@ PRESETS = {
     }
 }
 
-
 # --- CONSTANTE DE REFERENCIA FISIOLÓGICA ---
-# Caudal de una arteria sana de referencia (r=1.5mm, η=0.0035, L=10cm, ΔP=1600Pa)
-# Se usa para calcular el esfuerzo cardíaco relativo
 _r_ref = 0.0015; _visc_ref = 0.0035; _L_ref = 0.10; _dP_ref = 1600
 Q_NORMAL_REF_M3S = (np.pi * _r_ref**4 * _dP_ref) / (8 * _visc_ref * _L_ref)
 
@@ -232,45 +206,28 @@ def calcular_hemodinamica(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa, den
     r_m = r_mm / 1000.0
     L_m = L_cm / 100.0
 
-    # Radio en la zona más estrecha (Z=0)
     r_min_mm = get_radio_local(0, r_mm, porcentaje_placa, L_cm)
     r_min_m = r_min_mm / 1000.0
 
-    # Cálculos hemodinámicos basados en la zona de mayor oclusión
     A_m2 = np.pi * (r_min_m**2)
     Q_m3s = (np.pi * (r_min_m**4) * delta_P) / (8 * viscosidad * L_m) if L_m > 0 else 0
     v_ms = Q_m3s / A_m2 if A_m2 > 0 else 0
     Re = (2 * densidad * v_ms * r_min_m) / viscosidad if viscosidad > 0 else 0
     R = (8 * viscosidad * L_m) / (np.pi * (r_min_m**4)) if r_min_m > 0 else float('inf')
 
-    # ── Trabajo cardíaco correcto ──────────────────────────────────────────────
-    # W = Q * ΔP  refleja la potencia ÚTIL entregada al flujo (producto de ambos).
-    # El problema clínico: con arteriosclerosis, Q cae drásticamente (∝ r⁴) y
-    # ΔP en el modelo es fijo por slider → W_util puede parecer que baja.
-    #
-    # Para mostrar el ESFUERZO REAL del corazón usamos la potencia hidráulica
-    # total que el corazón debe generar para vencer la resistencia R a presión ΔP:
-    #   W_cardiaco = ΔP² / R   (de W = Q·ΔP y Q = ΔP/R)
-    # Con mayor R y mismo ΔP → W_cardiaco SIEMPRE sube, lo que es fisiológicamente correcto.
-    # ─────────────────────────────────────────────────────────────────────────
-    # ── Trabajo cardíaco correcto ────────────────────────────────────────────
-    # W_esfuerzo = R × Q_normal²  → "¿cuánto debe trabajar el corazón para
-    # mantener el caudal saludable contra esta resistencia?"
-    # Con mayor R, W_esfuerzo SIEMPRE sube — fisiológicamente correcto.
-    W_util_watts    = Q_m3s * delta_P                      # Potencia entregada al flujo real
-    W_esfuerzo_w    = R * (Q_NORMAL_REF_M3S ** 2)          # Esfuerzo cardíaco relativo
+    W_util_watts    = Q_m3s * delta_P
+    W_esfuerzo_w    = R * (Q_NORMAL_REF_M3S ** 2)
 
     Q_ml_min        = Q_m3s * 60 * 1_000_000
     v_cm_s          = v_ms * 100
-    W_util_mj       = W_util_watts  * 60 * 1000            # mJ/min
-    W_esfuerzo_mj   = W_esfuerzo_w  * 60 * 1000           # mJ/min
+    W_util_mj       = W_util_watts  * 60 * 1000
+    W_esfuerzo_mj   = W_esfuerzo_w  * 60 * 1000
 
     return Q_ml_min, v_cm_s, Re, R, W_util_mj, W_esfuerzo_mj, r_min_mm
 
 def generar_frames_particulas(num_particulas, num_frames, v_base_cm_s, Re, L_cm, r_mm, porcentaje_placa):
-    """Simula el movimiento de los glóbulos rojos a través del tubo con fluidez controlada"""
     dt = 0.025  
-    factor_ralentizacion = 0.15 # 👈 NUEVO: Reduce la velocidad visual al 15% de la real
+    factor_ralentizacion = 0.15 
     
     z_actual = np.random.uniform(-L_cm/2, L_cm/2, num_particulas)
     rho = np.random.uniform(0, 0.85, num_particulas) 
@@ -284,7 +241,6 @@ def generar_frames_particulas(num_particulas, num_frames, v_base_cm_s, Re, L_cm,
         v_local = v_base_cm_s * ((r_mm / r_local)**2)
         v_perfil = v_local * (1 - rho**2) 
         
-        # 👈 APLICAMOS EL FACTOR AQUÍ
         z_actual += v_perfil * dt * factor_ralentizacion 
         z_actual = np.where(z_actual > L_cm/2, -L_cm/2, z_actual) 
         
@@ -305,7 +261,6 @@ def generar_frames_particulas(num_particulas, num_frames, v_base_cm_s, Re, L_cm,
     return historico
 
 def crear_visualizacion_corte_transversal(r_mm, porcentaje_placa, L_cm, z_posicion=0):
-    """Crea una visualización del corte transversal de la arteria"""
     fig = go.Figure()
     
     r_local = get_radio_local(z_posicion, r_mm, porcentaje_placa, L_cm)
@@ -322,16 +277,13 @@ def crear_visualizacion_corte_transversal(r_mm, porcentaje_placa, L_cm, z_posici
     x_plasma = r_local * np.cos(theta)
     y_plasma = r_local * np.sin(theta)
     
-    # Capa 1: Arteria Exterior
     fig.add_trace(go.Scatter(x=x_exterior, y=y_exterior, mode='lines',
                              line=dict(color='crimson', width=3), name='Pared Arterial'))
     
-    # Capa 2: Placa
     fig.add_trace(go.Scatter(x=x_placa, y=y_placa, fill='toself', 
                              fillcolor='rgba(255, 165, 0, 0.6)', 
                              name='Placa', line=dict(color='orange')))
     
-    # Capa 3: Plasma/Luz arterial
     fig.add_trace(go.Scatter(x=x_plasma, y=y_plasma, fill='toself',
                              fillcolor='rgba(0, 100, 255, 0.2)',
                              name='Luz Arterial (Plasma)', line=dict(color='royalblue')))
@@ -349,7 +301,6 @@ def crear_visualizacion_corte_transversal(r_mm, porcentaje_placa, L_cm, z_posici
     return fig
 
 def crear_perfil_velocidad(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa):
-    """Crea el perfil de velocidad parabólico (Poiseuille)"""
     r_min_mm = get_radio_local(0, r_mm, porcentaje_placa, L_cm)
     
     r_vals = np.linspace(0, r_min_mm, 50)
@@ -388,7 +339,6 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     st.markdown("---")
     
-    # Presets
     col_preset = st.columns([1, 1, 1, 1, 1])
     preset_nombres = list(PRESETS.keys())
     
@@ -396,7 +346,6 @@ with tab1:
         if col.button(f"🏥 {nombre}", use_container_width=True):
             st.session_state.preset = nombre
     
-    # Cargar preset si está seleccionado
     if "preset" in st.session_state and st.session_state.preset in PRESETS:
         preset = PRESETS[st.session_state.preset]
         r_mm_default = preset["r_mm"]
@@ -430,11 +379,9 @@ with tab1:
         porcentaje_placa = st.slider("Grosor de placa (%)", 0, 95, int(porcentaje_placa_default), 1)
         densidad = st.slider("Densidad ρ (kg/m³)", 1000, 1100, densidad_default, 5)
     
-    # Cálculos
     Q, v_max, Re, R, W_util, W_esf, r_min = calcular_hemodinamica(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa, densidad)
     tipo_flujo = "Laminar" if Re < 2000 else ("Transicional" if Re < 4000 else "Turbulento")
     
-    # Diagnóstico clínico
     st.markdown("---")
     if porcentaje_placa > 70:
         st.markdown('<div class="danger-box">⚠️ <b>Oclusión Crítica:</b> Riesgo de infarto. Requiere intervención urgente.</div>', unsafe_allow_html=True)
@@ -445,7 +392,6 @@ with tab1:
     else:
         st.markdown('✅ **Estado Normal:** Flujo arterial saludable', unsafe_allow_html=True)
     
-    # Métricas principales
     st.markdown("---")
     st.subheader("📊 Hemodinámica")
     
@@ -473,7 +419,6 @@ with tab1:
     with metric_cols2[1]:
         st.metric("Radio mínimo", f"{r_min:.3f} mm")
     with metric_cols2[2]:
-        # Notacion cientifica explicita con tipografia matematica
         R_exp = int(np.floor(np.log10(R))) if R > 0 else 0
         R_mantisa = R / (10 ** R_exp) if R > 0 else 0
         R_normal_ref = (8 * 0.0035 * 0.10) / (np.pi * (0.0015**4))
@@ -490,50 +435,42 @@ with tab1:
     
     st.markdown("---")
     
-    # ==================== SECCIÓN 3D OPTIMIZADA ====================
     st.subheader("🌀 Simulación 3D del Flujo Sanguíneo")
     st.caption("Visualización interactiva: La placa aterosclerótica se muestra en amarillo, el vaso exterior en rojo tenue y los eritrocitos fluyendo por la luz disponible.")
     
-    # 1. Generar la Malla de la Arteria Exterior
     z_vals = np.linspace(-L_cm/2, L_cm/2, 60)
     theta_vals = np.linspace(0, 2*np.pi, 40)
     z_grid, theta_grid = np.meshgrid(z_vals, theta_vals)
     
-    # Radio constante para la pared exterior (Arteria sana)
     r_exterior = np.full_like(z_grid, r_mm)
     x_ext = r_exterior * np.cos(theta_grid)
     y_ext = r_exterior * np.sin(theta_grid)
     
-    # 2. Generar la Malla de la Placa (Interior)
     r_interior = np.array([get_radio_local(z, r_mm, porcentaje_placa, L_cm) for z in z_vals])
     r_interior = np.tile(r_interior, (40, 1))
     x_int = r_interior * np.cos(theta_grid)
     y_int = r_interior * np.sin(theta_grid)
     
-    # 3. Simular Partículas (Fluidez Mejorada)
-    num_frames = 80 # Más fotogramas = más suavidad
+    num_frames = 80 
     particulas_historico = generar_frames_particulas(120, num_frames, v_max/2, Re, L_cm, r_mm, porcentaje_placa)
     
     fig = go.Figure()
     
-    # TRACE 0: Partículas (Eritrocitos) - Es crucial que sea el primero para animarlo sin redibujar mallas
     x0, y0, z0 = particulas_historico[0]
     fig.add_trace(go.Scatter3d(
         x=z0, y=x0, z=y0,
         mode='markers',
         marker=dict(size=5, color='#ff0000', symbol='circle', opacity=1.0, 
-                    line=dict(color='#8B0000', width=1)), # Borde oscuro para dar volumen
+                    line=dict(color='#8B0000', width=1)),
         name='Eritrocitos'
     ))
 
-    # TRACE 1: Pared Arterial (Exterior)
     fig.add_trace(go.Surface(
         x=z_grid, y=x_ext, z=y_ext,
         colorscale='Reds', showscale=False, opacity=0.1, 
         name='Pared Arterial', hoverinfo='skip'
     ))
     
-    # TRACE 2: Placa Aterosclerótica (Si existe oclusión)
     if porcentaje_placa > 0:
         fig.add_trace(go.Surface(
             x=z_grid, y=x_int, z=y_int,
@@ -541,18 +478,16 @@ with tab1:
             name='Placa', hoverinfo='skip'
         ))
     
-    # Construir frames SOLO actualizando la Traza 0 (Partículas)
     frames = []
     for i in range(num_frames):
         x_i, y_i, z_i = particulas_historico[i]
         frames.append(go.Frame(
             data=[go.Scatter3d(x=z_i, y=x_i, z=y_i)],
             name=str(i),
-            traces=[0] # ¡EL SECRETO DE LA FLUIDEZ! Solo actualiza los puntos, no la geometría pesada
+            traces=[0]
         ))
     fig.frames = frames
     
-    # Configurar animación y vista
     fig.update_layout(
         scene=dict(
             xaxis_title='Longitud (cm)',
@@ -572,7 +507,7 @@ with tab1:
             buttons=[
                 dict(label="▶ Reproducir Flujo",
                      method="animate",
-                     args=[None, dict(frame=dict(duration=20, redraw=True), # 20ms = Animación muy fluida
+                     args=[None, dict(frame=dict(duration=20, redraw=True), 
                                       transition=dict(duration=0),
                                       fromcurrent=True, mode="immediate")]),
                 dict(label="⏸ Pausa",
@@ -607,7 +542,6 @@ with tab2:
     comparativo_data = []
     resistencias_raw = {}
 
-    # Primera pasada: calcular todas las resistencias crudas
     for nombre, preset in PRESETS.items():
         Q, v, Re, R, W_util, W_esf, r_min = calcular_hemodinamica(
             preset["r_mm"], preset["L_cm"], preset["viscosidad"],
@@ -615,15 +549,13 @@ with tab2:
         )
         resistencias_raw[nombre] = (Q, v, Re, R, W_util, W_esf, r_min)
 
-    # Resistencia de referencia (arteria normal)
     R_normal = resistencias_raw["Arteria normal"][3]
 
     for nombre, preset in PRESETS.items():
         Q, v, Re, R, W_util, W_esf, r_min = resistencias_raw[nombre]
         tipo_flujo = "Laminar" if Re < 2000 else ("Transicional" if Re < 4000 else "Turbulento")
-        factor_R = R / R_normal  # Cuántas veces mayor que la arteria sana
+        factor_R = R / R_normal
 
-        # Descomponer en mantisa y exponente para mostrarlo de forma explícita
         exponente = int(np.floor(np.log10(R)))
         mantisa = R / (10 ** exponente)
 
@@ -643,13 +575,10 @@ with tab2:
     df_comparativo = pd.DataFrame(comparativo_data)
     st.dataframe(df_comparativo, use_container_width=True)
 
-    # Leyenda explicativa
     st.info(
         "💡 **¿Por qué aumenta la resistencia?** La columna *'Factor vs. Sano'* muestra cuántas veces "
         "es mayor la resistencia respecto a una arteria sana. A mayor oclusión → menor radio efectivo → "
         "la resistencia crece según **R ∝ 1/r⁴** (Ley de Poiseuille). "
-        "Nota: compara el **exponente** (10^8, 10^8, 10^9...) y la **mantisa** por separado para leer "
-        "correctamente la notación científica."
     )
     
     st.markdown("---")
@@ -694,14 +623,11 @@ with tab3:
     col_graf1, col_graf2 = st.columns(2)
     
     with col_graf1:
-        # Gráfica 1: Perfiles superpuestos (Normal vs Actual)
         st.markdown("#### Perfil de Velocidad Superpuesto")
         
-        # Calculamos perfil normal (placa = 0)
         r_normal_vals = np.linspace(-r_mm, r_mm, 100)
         v_normal_vals = (delta_P / (4 * viscosidad)) * (r_mm**2 - r_normal_vals**2)
         
-        # Calculamos perfil patológico (con el porcentaje de placa actual)
         r_min_actual = get_radio_local(0, r_mm, porcentaje_placa, L_cm)
         r_pat_vals = np.linspace(-r_min_actual, r_min_actual, 100)
         v_pat_vals = (delta_P / (4 * viscosidad)) * (r_min_actual**2 - r_pat_vals**2)
@@ -721,18 +647,14 @@ with tab3:
         st.plotly_chart(fig_superpuesta, use_container_width=True)
         
     with col_graf2:
-        # Gráfica 2: La curva Cuártica Q proporcional a r^4
         st.markdown("#### La Ley Cuártica ($Q \propto r^4$)")
         
-        # Generamos radios de 0.1 a r_mm
         radios_teoricos = np.linspace(0.1, r_mm, 50)
-        # Caudal teórico basado en Poiseuille manteniendo la presión y viscosidad actual
         caudales_teoricos = (np.pi * (radios_teoricos/1000.0)**4 * delta_P) / (8 * viscosidad * (L_cm/100.0))
-        caudales_teoricos_ml = caudales_teoricos * 60 * 1000000 # Convertir a mL/min
+        caudales_teoricos_ml = caudales_teoricos * 60 * 1000000 
         
         caudal_maximo = caudales_teoricos_ml[-1]
         
-        # Punto clave: 20% de reducción de radio = 80% del radio original
         r_80 = r_mm * 0.8
         q_80 = (np.pi * (r_80/1000.0)**4 * delta_P) / (8 * viscosidad * (L_cm/100.0)) * 60 * 1000000
         
@@ -741,12 +663,10 @@ with tab3:
                                           mode='lines', line=dict(color='royalblue', width=3),
                                           name='Curva de Caudal'))
         
-        # Marcador del 100% de radio
         fig_cuartica.add_trace(go.Scatter(x=[r_mm], y=[caudal_maximo], mode='markers+text',
                                           marker=dict(color='green', size=10),
                                           text=["Radio 100%"], textposition="top center", name='Sano'))
         
-        # Marcador del 80% de radio (Muestra la caída del 59%)
         fig_cuartica.add_trace(go.Scatter(x=[r_80], y=[q_80], mode='markers+text',
                                           marker=dict(color='orange', size=10),
                                           text=["Radio 80%<br>Caudal cae ~59%"], textposition="bottom right", name='-20% Radio'))
@@ -756,110 +676,112 @@ with tab3:
                                                      text="Un cambio leve en el radio<br>tiene un efecto drástico.",
                                                      showarrow=True, arrowhead=2, ax=-50, ay=-50)])
         st.plotly_chart(fig_cuartica, use_container_width=True)
+
 # ==================== TAB 4: MARCO TEÓRICO ====================
 with tab4:
-    st.subheader("📚 Fundamentos Teóricos")
+    st.subheader("📚 Fundamentos Teóricos y Hemodinámica")
 
     st.markdown("""
     <style>
     .marco-teorico {
         font-family: 'Source Serif 4', 'Georgia', serif;
-        font-size: 1.05rem;
-        line-height: 1.75;
-        color: #1a1a1a;
+        font-size: 1.08rem;
+        line-height: 1.8;
+        color: inherit;
+        padding: 5px 15px;
     }
     .marco-teorico h3 {
         font-family: 'STIX Two Text', 'Cambria', serif !important;
-        font-size: 1.25rem;
+        font-size: 1.35rem;
         font-weight: 600;
-        border-bottom: 1.5px solid #c0392b;
-        padding-bottom: 4px;
-        margin-top: 2rem;
-        color: #7b0000;
+        border-bottom: 2px solid #c0392b;
+        padding-bottom: 6px;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+        color: #c0392b;
     }
     .marco-teorico .variable {
         font-family: 'STIX Two Text', serif;
         font-style: italic;
-        font-weight: 500;
+        font-weight: 600;
+        color: #c0392b;
     }
-    .formula-box {
-        background: #fafaf7;
-        border: 1px solid #d4c5a9;
-        border-left: 4px solid #8B0000;
-        border-radius: 6px;
-        padding: 16px 24px;
-        margin: 1rem 0;
-        text-align: center;
-        font-family: 'STIX Two Text', serif;
+    .concept-card {
+        background: rgba(41, 128, 185, 0.08);
+        border-left: 4px solid #2980b9;
+        padding: 15px 20px;
+        margin: 15px 0;
+        border-radius: 0 8px 8px 0;
     }
     .ref-biblio {
         font-family: 'Source Serif 4', serif;
-        font-size: 0.82rem;
-        color: #555;
-        font-style: italic;
-        border-top: 1px solid #ddd;
-        margin-top: 2rem;
-        padding-top: 1rem;
+        font-size: 0.95rem;
+        color: inherit;
+        opacity: 0.85;
+        line-height: 1.6;
+        border-top: 1px solid rgba(128,128,128,0.3);
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+    }
+    .ref-biblio li {
+        margin-bottom: 10px;
     }
     </style>
-
+    
     <div class="marco-teorico">
+    <h3>1. Ley de Hagen-Poiseuille y la Resistencia Vascular</h3>
+    <p>La hemodinámica arterial se rige fundamentalmente por la Ley de Hagen-Poiseuille, que describe el caudal volumétrico ($Q$) de un fluido incompresible y newtoniano que fluye en régimen laminar a través de un tubo cilíndrico de sección constante.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("$$ Q = \\frac{\\pi r^4 \\Delta P}{8 \\eta L} $$")
+    
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>Donde:</p>
+    <ul>
+        <li><span class="variable">r</span> : Radio interno del vaso sanguíneo.</li>
+        <li><span class="variable">ΔP</span> : Gradiente de presión a lo largo del vaso.</li>
+        <li><span class="variable">η</span> : Viscosidad dinámica de la sangre.</li>
+        <li><span class="variable">L</span> : Longitud del segmento arterial.</li>
+    </ul>
 
-    <h3>1. Ley de Hagen–Poiseuille</h3>
-    <p>Describe el caudal para un flujo laminar, incompresible y viscoso a través de un tubo cilíndrico recto de sección constante. Es el modelo fundamental de la hemodinámica en vasos sanguíneos pequeños:</p>
+    <div class="concept-card">
+        <b>💡 Implicación Clínica (La relación cuártica):</b> Como el radio ($r$) está elevado a la cuarta potencia, una reducción aparentemente pequeña en el diámetro del vaso (estenosis aterosclerótica) causa una caída drástica en el flujo sanguíneo. Por ejemplo, reducir el radio a la mitad hace que el caudal volumétrico disminuya en un factor de $2^4 = 16$. Para compensar esta enorme resistencia, el corazón debe realizar un trabajo hidráulico significativamente mayor.
+    </div>
+
+    <h3>2. Número de Reynolds y Tipos de Flujo Sanguíneo</h3>
+    <p>En condiciones fisiológicas normales, la sangre fluye de manera ordenada. Sin embargo, cuando hay obstrucciones (placas), la velocidad local aumenta y el flujo puede volverse caótico. Esto se predice mediante el <b>Número de Reynolds ($Re$)</b>, una magnitud adimensional que relaciona las fuerzas inerciales con las fuerzas viscosas:</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("$$ Re = \\frac{2 \\rho v r}{\\eta} $$")
+    
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>Dependiendo del valor de $Re$, el flujo se clasifica en:</p>
+    <ul>
+        <li><b>Flujo Laminar ($Re < 2000$):</b> Es el flujo saludable. Las partículas de sangre viajan en trayectorias paralelas ("láminas"), siendo la velocidad máxima en el centro del vaso y casi nula en las paredes. Es eficiente, reduce la resistencia y es silencioso.</li>
+        <li><b>Flujo Transicional ($2000 \le Re \le 4000$):</b> El flujo comienza a desestabilizarse, perdiendo el perfil parabólico y presentando pequeñas fluctuaciones.</li>
+        <li><b>Flujo Turbulento ($Re > 4000$):</b> Las fuerzas inerciales dominan. La sangre se mueve de forma desordenada formando vórtices o remolinos. Este flujo genera soplos audibles (como los detectados en ecografía Doppler), aumenta el daño al endotelio vascular por estrés mecánico de impacto, y eleva dramáticamente la probabilidad de trombosis.</li>
+    </ul>
     </div>
     """, unsafe_allow_html=True)
 
-    st.latex(r"Q = \frac{\pi r^4 \Delta P}{8 \, \eta \, L}")
+    st.markdown("")
 
     st.markdown("""
     <div class="marco-teorico">
-    <p>Donde: <span class="variable">Q</span> = caudal volumétrico (m³/s),
-    <span class="variable">r</span> = radio interno del vaso (m),
-    <span class="variable">ΔP</span> = diferencia de presión (Pa),
-    <span class="variable">η</span> = viscosidad dinámica (Pa·s),
-    <span class="variable">L</span> = longitud del segmento (m).</p>
-
-    <h3>2. Resistencia Vascular (Ley de Ohm Hemodinámica)</h3>
-    <p>Análoga a la resistencia eléctrica, la resistencia vascular relaciona la caída de presión con el caudal. Por Poiseuille, se puede expresar como:</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(r"R = \frac{\Delta P}{Q} = \frac{8 \, \eta \, L}{\pi \, r^4}")
-
-    st.markdown("""
-    <div class="marco-teorico">
-    <p>La dependencia cuártica en el radio (<span class="variable">R ∝ r⁻⁴</span>) implica que una reducción del 50 % en el radio aumenta la resistencia en un factor de <strong>2⁴ = 16</strong>.</p>
-
-    <h3>3. Número de Reynolds</h3>
-    <p>Cociente adimensional que permite predecir la transición entre flujo laminar y turbulento:</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(r"Re = \frac{2 \rho \, v \, r}{\eta}")
-
-    st.markdown("""
-    <div class="marco-teorico">
-    <p>Donde <span class="variable">ρ</span> = densidad del fluido (kg/m³), <span class="variable">v</span> = velocidad media (m/s).
-    Regímenes: <em>Re &lt; 2 000</em> → laminar; <em>2 000 – 4 000</em> → transicional; <em>Re &gt; 4 000</em> → turbulento.</p>
-
-    <h3>4. Modelado Geométrico de la Placa (Oclusión Gaussiana)</h3>
-    <p>Para simular la forma natural de una placa aterosclerótica, se emplea una función de decaimiento exponencial (campana de Gauss) anclada en el centro del vaso (<span class="variable">z = 0</span>):</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(r"r(z) = r_{\text{base}} \left(1 - \frac{p}{100}\, e^{-z^2/(0.05\,L^2)}\right)")
-
-    st.markdown("""
-    <div class="marco-teorico">
-    <p>Donde <span class="variable">p</span> es el porcentaje máximo de estenosis.</p>
+    <h3>3. Fisiopatología de la Arteriosclerosis desde la Mecánica de Fluidos</h3>
+    <p>La ateroesclerosis no es solo una acumulación pasiva de lípidos; es un proceso directamente mediado por la biomecánica. El estrés cortante de la pared (<i>Wall Shear Stress</i>, WSS) es la fuerza de fricción tangencial que ejerce la sangre sobre el endotelio. En zonas donde el flujo se vuelve turbulento, oscilatorio o recircula (frecuente detrás de una estenosis o en bifurcaciones), el WSS es bajo o irregular. El endotelio detecta estas fuerzas mecánicas anómalas (mecano-transducción), desencadenando una respuesta inflamatoria crónica que favorece la retención de colesterol LDL y la expansión sistémica de la placa.</p>
 
     <div class="ref-biblio">
-    <strong>Referencias bibliográficas:</strong><br>
-    • Munson, B. R., Young, D. F., &amp; Okiishi, T. H. (2006). <em>Fundamentals of Fluid Mechanics</em> (5th ed.). Wiley.<br>
-    • Guyton, A. C., &amp; Hall, J. E. (2011). <em>Textbook of Medical Physiology</em> (12th ed.). Elsevier Saunders.<br>
-    • White, F. M. (2011). <em>Fluid Mechanics</em> (7th ed.). McGraw-Hill.<br>
-    • Cengel, Y. A., &amp; Cimbala, J. M. (2014). <em>Fluid Mechanics: Fundamentals and Applications</em> (3rd ed.). McGraw-Hill.
+        <b>Bibliografía y Referencias Académicas:</b>
+        <ul>
+            <li>Ku, D. N. (1997). <i>Blood flow in arteries</i>. Annual Review of Fluid Mechanics, 29(1), 399-434.</li>
+            <li>Caro, C. G., Pedley, T. J., Schroter, R. C., & Seed, W. A. (2012). <i>The Mechanics of the Circulation</i>. Cambridge University Press.</li>
+            <li>Chatzizisis, Y. S., Coskun, A. U., Jonas, M., Edelman, E. R., Feldman, C. L., & Stone, P. H. (2007). <i>Role of endothelial shear stress in the natural history of coronary atherosclerosis and vascular remodeling</i>. Journal of the American College of Cardiology, 49(25), 2379-2393.</li>
+        </ul>
     </div>
     </div>
     """, unsafe_allow_html=True)

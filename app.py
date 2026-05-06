@@ -11,26 +11,169 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILOS ---
+# --- ESTILOS CON TIPOGRAFÍA MATEMÁTICA + MODO OSCURO ---
 st.markdown("""
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+
     <style>
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
+    /* ── Tipografia global tipo libro (light Y dark) ── */
+    html, body, [class*="css"], .stApp, .stMarkdown, p, li, label,
+    .stMetric, .stSelectbox, .stSlider, .stRadio, .stTabs, div, span {
+        font-family: 'Source Serif 4', 'Georgia', 'Times New Roman', serif !important;
+        font-size: 1.05rem;
     }
+
+    /* Titulos con STIX Two */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'STIX Two Text', 'Cambria', 'Georgia', serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.01em;
+        font-size: 1.25rem;
+    }
+    h1 { font-size: 1.9rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.25rem !important; }
+
+    /* Valores numéricos en métricas — hereda color del tema */
+    [data-testid="stMetricValue"] {
+        font-family: 'STIX Two Text', 'Cambria', serif !important;
+        font-size: 1.55rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.02em;
+        color: inherit !important;
+    }
+
+    /* Etiquetas de métricas */
+    [data-testid="stMetricLabel"] p {
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 0.88rem !important;
+        font-weight: 400 !important;
+        font-style: italic;
+        color: inherit !important;
+        opacity: 0.75;
+    }
+
+    /* Tabla */
+    .dataframe, table, th, td {
+        font-family: 'STIX Two Text', 'Cambria', serif !important;
+        font-size: 0.97rem !important;
+    }
+
+    /* ── Cajas adaptativas (light/dark) ── */
     .warning-box {
-        background-color: #fff3cd;
+        background-color: rgba(200, 134, 10, 0.15);
         padding: 15px;
-        border-radius: 5px;
-        border-left: 4px solid #ff9800;
+        border-radius: 4px;
+        border-left: 5px solid #c8860a;
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 1.02rem;
+        color: inherit;
     }
     .danger-box {
-        background-color: #f8d7da;
+        background-color: rgba(166, 28, 28, 0.15);
         padding: 15px;
-        border-radius: 5px;
-        border-left: 4px solid #d32f2f;
+        border-radius: 4px;
+        border-left: 5px solid #c0392b;
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 1.02rem;
+        color: inherit;
+    }
+
+    /* ── Tarjeta de resistencia adaptativa ── */
+    .resistencia-card {
+        background: rgba(192, 57, 43, 0.08);
+        border: 1.5px solid #c0392b;
+        border-radius: 8px;
+        padding: 14px 18px;
+        text-align: center;
+        margin-top: 4px;
+    }
+    .resistencia-label {
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 0.88rem;
+        font-style: italic;
+        display: block;
+        margin-bottom: 4px;
+        color: inherit;
+        opacity: 0.8;
+    }
+    .resistencia-valor {
+        font-family: 'STIX Two Text', 'Cambria', serif !important;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #e05252;
+        display: block;
+        line-height: 1.3;
+        letter-spacing: 0.02em;
+    }
+    .resistencia-factor {
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 0.88rem;
+        margin-top: 3px;
+        display: block;
+        color: inherit;
+        opacity: 0.75;
+    }
+
+    /* ── Tarjeta de trabajo cardiaco ── */
+    .trabajo-card {
+        background: rgba(41, 98, 155, 0.10);
+        border: 1.5px solid #2962a3;
+        border-radius: 8px;
+        padding: 14px 18px;
+        text-align: center;
+        margin-top: 4px;
+    }
+    .trabajo-label {
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 0.88rem;
+        font-style: italic;
+        display: block;
+        margin-bottom: 4px;
+        color: inherit;
+        opacity: 0.8;
+    }
+    .trabajo-valor {
+        font-family: 'STIX Two Text', 'Cambria', serif !important;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #4a90d9;
+        display: block;
+        line-height: 1.3;
+        letter-spacing: 0.02em;
+    }
+    .trabajo-factor {
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 0.88rem;
+        margin-top: 3px;
+        display: block;
+        color: inherit;
+        opacity: 0.75;
+    }
+
+    /* ── Marco teórico ── */
+    .marco-teorico {
+        font-family: 'Source Serif 4', 'Georgia', serif;
+        font-size: 1.08rem;
+        line-height: 1.80;
+        color: inherit;
+    }
+    .marco-teorico .variable {
+        font-family: 'STIX Two Text', serif;
+        font-style: italic;
+        font-weight: 500;
+    }
+    .ref-biblio {
+        font-family: 'Source Serif 4', serif;
+        font-size: 0.88rem;
+        font-style: italic;
+        border-top: 1px solid rgba(128,128,128,0.3);
+        margin-top: 2rem;
+        padding-top: 1rem;
+        color: inherit;
+        opacity: 0.8;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -71,6 +214,13 @@ PRESETS = {
     }
 }
 
+
+# --- CONSTANTE DE REFERENCIA FISIOLÓGICA ---
+# Caudal de una arteria sana de referencia (r=1.5mm, η=0.0035, L=10cm, ΔP=1600Pa)
+# Se usa para calcular el esfuerzo cardíaco relativo
+_r_ref = 0.0015; _visc_ref = 0.0035; _L_ref = 0.10; _dP_ref = 1600
+Q_NORMAL_REF_M3S = (np.pi * _r_ref**4 * _dP_ref) / (8 * _visc_ref * _L_ref)
+
 # --- FUNCIONES MATEMÁTICAS Y GEOMÉTRICAS ---
 def get_radio_local(z_val, r_base_mm, porcentaje_placa, L_cm):
     """Calcula el radio de la arteria en un punto Z específico, formando la oclusión central."""
@@ -81,24 +231,41 @@ def get_radio_local(z_val, r_base_mm, porcentaje_placa, L_cm):
 def calcular_hemodinamica(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa, densidad=1060):
     r_m = r_mm / 1000.0
     L_m = L_cm / 100.0
-    
+
     # Radio en la zona más estrecha (Z=0)
     r_min_mm = get_radio_local(0, r_mm, porcentaje_placa, L_cm)
     r_min_m = r_min_mm / 1000.0
 
-    # Cálculos basados en la zona de mayor oclusión
+    # Cálculos hemodinámicos basados en la zona de mayor oclusión
     A_m2 = np.pi * (r_min_m**2)
     Q_m3s = (np.pi * (r_min_m**4) * delta_P) / (8 * viscosidad * L_m) if L_m > 0 else 0
     v_ms = Q_m3s / A_m2 if A_m2 > 0 else 0
     Re = (2 * densidad * v_ms * r_min_m) / viscosidad if viscosidad > 0 else 0
     R = (8 * viscosidad * L_m) / (np.pi * (r_min_m**4)) if r_min_m > 0 else float('inf')
-    W_watts = Q_m3s * delta_P
 
-    Q_ml_min = Q_m3s * 60 * 1000000
-    v_cm_s = v_ms * 100
-    W_mj_min = W_watts * 60 * 1000
+    # ── Trabajo cardíaco correcto ──────────────────────────────────────────────
+    # W = Q * ΔP  refleja la potencia ÚTIL entregada al flujo (producto de ambos).
+    # El problema clínico: con arteriosclerosis, Q cae drásticamente (∝ r⁴) y
+    # ΔP en el modelo es fijo por slider → W_util puede parecer que baja.
+    #
+    # Para mostrar el ESFUERZO REAL del corazón usamos la potencia hidráulica
+    # total que el corazón debe generar para vencer la resistencia R a presión ΔP:
+    #   W_cardiaco = ΔP² / R   (de W = Q·ΔP y Q = ΔP/R)
+    # Con mayor R y mismo ΔP → W_cardiaco SIEMPRE sube, lo que es fisiológicamente correcto.
+    # ─────────────────────────────────────────────────────────────────────────
+    # ── Trabajo cardíaco correcto ────────────────────────────────────────────
+    # W_esfuerzo = R × Q_normal²  → "¿cuánto debe trabajar el corazón para
+    # mantener el caudal saludable contra esta resistencia?"
+    # Con mayor R, W_esfuerzo SIEMPRE sube — fisiológicamente correcto.
+    W_util_watts    = Q_m3s * delta_P                      # Potencia entregada al flujo real
+    W_esfuerzo_w    = R * (Q_NORMAL_REF_M3S ** 2)          # Esfuerzo cardíaco relativo
 
-    return Q_ml_min, v_cm_s, Re, R, W_mj_min, r_min_mm
+    Q_ml_min        = Q_m3s * 60 * 1_000_000
+    v_cm_s          = v_ms * 100
+    W_util_mj       = W_util_watts  * 60 * 1000            # mJ/min
+    W_esfuerzo_mj   = W_esfuerzo_w  * 60 * 1000           # mJ/min
+
+    return Q_ml_min, v_cm_s, Re, R, W_util_mj, W_esfuerzo_mj, r_min_mm
 
 def generar_frames_particulas(num_particulas, num_frames, v_base_cm_s, Re, L_cm, r_mm, porcentaje_placa):
     """Simula el movimiento de los glóbulos rojos a través del tubo con fluidez controlada"""
@@ -264,11 +431,7 @@ with tab1:
         densidad = st.slider("Densidad ρ (kg/m³)", 1000, 1100, densidad_default, 5)
     
     # Cálculos
-    Q, v_max, Re, R, W, r_min = calcular_hemodinamica(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa, densidad)
-    # Clasificación del flujo según el número de Reynolds:
-    # Re < 2000: Laminar (ordenado, sin turbulencia)
-    # 2000 ≤ Re < 4000: Transicional (comenzando a mostrar inestabilidades)
-    # Re ≥ 4000: Turbulento (caótico, con remolinos y vórtices)
+    Q, v_max, Re, R, W_util, W_esf, r_min = calcular_hemodinamica(r_mm, L_cm, viscosidad, delta_P, porcentaje_placa, densidad)
     tipo_flujo = "Laminar" if Re < 2000 else ("Transicional" if Re < 4000 else "Turbulento")
     
     # Diagnóstico clínico
@@ -294,7 +457,15 @@ with tab1:
     with metric_cols[2]:
         st.metric(f"Reynolds (Re)", f"{Re:.0f}")
     with metric_cols[3]:
-        st.metric("Trabajo W", f"{W:.2f} mJ/min")
+        W_normal_ref_card = (8 * 0.0035 * 0.10) / (np.pi * (0.0015**4)) * (Q_NORMAL_REF_M3S**2) * 60 * 1000
+        W_factor = W_esf / W_normal_ref_card if W_normal_ref_card > 0 else 1.0
+        st.markdown(f"""
+        <div class="trabajo-card">
+            <span class="trabajo-label">Trabajo cardíaco <em>W</em> (mJ/min)</span>
+            <span class="trabajo-valor">{W_esf:.2f}</span>
+            <span class="trabajo-factor">≈ {W_factor:.1f}× el esfuerzo sano</span>
+        </div>
+        """, unsafe_allow_html=True)
     
     metric_cols2 = st.columns(4)
     with metric_cols2[0]:
@@ -302,7 +473,18 @@ with tab1:
     with metric_cols2[1]:
         st.metric("Radio mínimo", f"{r_min:.3f} mm")
     with metric_cols2[2]:
-        st.metric("Resistencia R", f"{R:.2e} Pa·s/m³")
+        # Notacion cientifica explicita con tipografia matematica
+        R_exp = int(np.floor(np.log10(R))) if R > 0 else 0
+        R_mantisa = R / (10 ** R_exp) if R > 0 else 0
+        R_normal_ref = (8 * 0.0035 * 0.10) / (np.pi * (0.0015**4))
+        R_factor = R / R_normal_ref
+        st.markdown(f"""
+        <div class="resistencia-card">
+            <span class="resistencia-label">Resistencia <em>R</em> (Pa·s/m³)</span>
+            <span class="resistencia-valor">{R_mantisa:.3f} &times; 10<sup style="font-size:0.65em">{R_exp}</sup></span>
+            <span class="resistencia-factor">≈ {R_factor:.1f}× la resistencia sana</span>
+        </div>
+        """, unsafe_allow_html=True)
     with metric_cols2[3]:
         st.metric("Densidad ρ", f"{densidad} kg/m³")
     
@@ -423,13 +605,28 @@ with tab2:
     st.subheader("📊 Comparativo entre Condiciones Clínicas")
     
     comparativo_data = []
+    resistencias_raw = {}
+
+    # Primera pasada: calcular todas las resistencias crudas
     for nombre, preset in PRESETS.items():
-        Q, v, Re, R, W, r_min = calcular_hemodinamica(
+        Q, v, Re, R, W_util, W_esf, r_min = calcular_hemodinamica(
             preset["r_mm"], preset["L_cm"], preset["viscosidad"],
             preset["delta_P"], preset["porcentaje_placa"], preset["densidad"]
         )
+        resistencias_raw[nombre] = (Q, v, Re, R, W_util, W_esf, r_min)
+
+    # Resistencia de referencia (arteria normal)
+    R_normal = resistencias_raw["Arteria normal"][3]
+
+    for nombre, preset in PRESETS.items():
+        Q, v, Re, R, W_util, W_esf, r_min = resistencias_raw[nombre]
         tipo_flujo = "Laminar" if Re < 2000 else ("Transicional" if Re < 4000 else "Turbulento")
-        
+        factor_R = R / R_normal  # Cuántas veces mayor que la arteria sana
+
+        # Descomponer en mantisa y exponente para mostrarlo de forma explícita
+        exponente = int(np.floor(np.log10(R)))
+        mantisa = R / (10 ** exponente)
+
         comparativo_data.append({
             "Condición": nombre,
             "Radio Base (mm)": f"{preset['r_mm']:.2f}",
@@ -438,11 +635,22 @@ with tab2:
             "Velocidad (cm/s)": f"{v:.2f}",
             "Reynolds": f"{Re:.0f}",
             "Tipo Flujo": tipo_flujo,
-            "Resistencia (Pa·s/m³)": f"{R:.2e}"
+            "Resistencia (Pa·s/m³)": f"{mantisa:.3f} × 10^{exponente}",
+            "Factor vs. Sano (×)": f"{factor_R:.1f}×",
+            "W esfuerzo (mJ/min)": f"{W_esf:.2f}"
         })
-    
+
     df_comparativo = pd.DataFrame(comparativo_data)
     st.dataframe(df_comparativo, use_container_width=True)
+
+    # Leyenda explicativa
+    st.info(
+        "💡 **¿Por qué aumenta la resistencia?** La columna *'Factor vs. Sano'* muestra cuántas veces "
+        "es mayor la resistencia respecto a una arteria sana. A mayor oclusión → menor radio efectivo → "
+        "la resistencia crece según **R ∝ 1/r⁴** (Ley de Poiseuille). "
+        "Nota: compara el **exponente** (10^8, 10^8, 10^9...) y la **mantisa** por separado para leer "
+        "correctamente la notación científica."
+    )
     
     st.markdown("---")
     
@@ -451,7 +659,7 @@ with tab2:
     reynolds = []
     
     for nombre, preset in PRESETS.items():
-        Q, v, Re, R, W, r_min = calcular_hemodinamica(
+        Q, v, Re, R, W_util, W_esf, r_min = calcular_hemodinamica(
             preset["r_mm"], preset["L_cm"], preset["viscosidad"],
             preset["delta_P"], preset["porcentaje_placa"], preset["densidad"]
         )
@@ -551,73 +759,107 @@ with tab3:
 # ==================== TAB 4: MARCO TEÓRICO ====================
 with tab4:
     st.subheader("📚 Fundamentos Teóricos")
-    
+
     st.markdown("""
-    ### Ley de Poiseuille
-    Describe el caudal para un flujo laminar incompresible y viscoso a través de un tubo cilíndrico de sección transversal constante:
-    
-    $$Q = \\frac{\\pi r^4 \\Delta P}{8 \\eta L}$$
-    
-    Donde:
-    - **Q:** Caudal volumétrico ($m^3/s$)
-    - **r:** Radio interno del tubo ($m$)
-    - **ΔP:** Diferencia de presión entre los extremos ($Pa$)
-    - **η:** Viscosidad dinámica del fluido ($Pa\\cdot s$)
-    - **L:** Longitud del segmento cilíndrico ($m$)
-    
-    ### Número de Reynolds
-    Unidad adimensional que permite predecir el patrón de flujo (Laminar vs Turbulento):
-    
-    $$Re = \\frac{2 \\rho v r}{\\eta}$$
-    
-    Donde:
-    - **ρ:** Densidad del fluido ($kg/m^3$)
-    - **v:** Velocidad media del fluido ($m/s$)    
-    ---
-    
-    ### 🌊 Clasificación del Tipo de Flujo
-    
-    El número de Reynolds clasifica el flujo en tres categorías:
-    
-    #### **Flujo Laminar** (Re < 2000)
-    - Las moléculas del fluido se mueven en **capas ordenadas** sin mezclarse lateralmente
-    - El perfil de velocidad es **parabólico** (máximo en el centro, cero en las paredes)
-    - Flujo **predecible y estable**: se describe completamente con la Ley de Poiseuille
-    - **Clínicamente:** Normal en arterias sanas. Bajo riesgo de trombosis
-    - 💙 *En la sangre humana normal (arterial), el flujo es típicamente laminar*
-    
-    #### **Flujo Transicional** (2000 ≤ Re < 4000)
-    - Región de **inestabilidad** donde comienza la turbulencia
-    - Pequeñas **ondulaciones** y perturbaciones locales
-    - Comportamiento **intermitente**: el flujo alterna entre laminar y turbulento
-    - **Clínicamente:** Inicio de cambios en el patrón de flujo. Requiere monitoreo
-    
-    #### **Flujo Turbulento** (Re ≥ 4000)
-    - Las moléculas se mueven **de forma caótica** con remolinos, vórtices y contravórtices
-    - **Mezcla intensiva** entre capas del fluido
-    - Mayor **disipación de energía** (requiere más presión para mantener el mismo caudal)
-    - **Ruido acústico** audible (soplos cardiacos en estenosis severa)
-    - **Clínicamente:** Indicador de **estenosis severa**, presencia de aneurismas o patología cardiovascular
-    - ⚠️ *Mayor riesgo de activación plaquetaria y formación de coágulos*
-    
-    ---
-    
-    #### ¿Por qué importa el tipo de flujo?
-    
-    | Aspecto | Laminar | Turbulento |
-    |--------|---------|------------|
-    | **Patrón** | Ordenado | Caótico |
-    | **Energía requerida** | Mínima | Muy alta |
-    | **Riesgo de coágulos** | Bajo ✅ | Alto ⚠️ |
-    | **Presión requerida** | Baja | Muy alta |
-    | **Predicibilidad** | Excelente | Impredecible |
-    | **Daño endotelial** | Mínimo | Significativo |
-    
-    En el **simulador**, observa cómo cambia el comportamiento del flujo al ajustar los parámetros. Un aumento en la **velocidad**, **densidad** o **disminución del radio** eleva el Reynolds y puede desencadenar turbulencia.    
-    ### Modelado Geométrico de la Placa (Oclusión Gaussiana)
-    Para simular la forma natural de una placa aterosclerótica, utilizamos una función de decaimiento exponencial (Campana de Gauss) anclada en el centro de la arteria ($z=0$):
-    
-    $$r(z) = r_{base} \\left(1 - \\frac{p}{100} e^{-z^2/(0.05L^2)}\\right)$$
-    
-    Donde **$p$** es el porcentaje máximo de estenosis (grosor de la placa).
-    """)
+    <style>
+    .marco-teorico {
+        font-family: 'Source Serif 4', 'Georgia', serif;
+        font-size: 1.05rem;
+        line-height: 1.75;
+        color: #1a1a1a;
+    }
+    .marco-teorico h3 {
+        font-family: 'STIX Two Text', 'Cambria', serif !important;
+        font-size: 1.25rem;
+        font-weight: 600;
+        border-bottom: 1.5px solid #c0392b;
+        padding-bottom: 4px;
+        margin-top: 2rem;
+        color: #7b0000;
+    }
+    .marco-teorico .variable {
+        font-family: 'STIX Two Text', serif;
+        font-style: italic;
+        font-weight: 500;
+    }
+    .formula-box {
+        background: #fafaf7;
+        border: 1px solid #d4c5a9;
+        border-left: 4px solid #8B0000;
+        border-radius: 6px;
+        padding: 16px 24px;
+        margin: 1rem 0;
+        text-align: center;
+        font-family: 'STIX Two Text', serif;
+    }
+    .ref-biblio {
+        font-family: 'Source Serif 4', serif;
+        font-size: 0.82rem;
+        color: #555;
+        font-style: italic;
+        border-top: 1px solid #ddd;
+        margin-top: 2rem;
+        padding-top: 1rem;
+    }
+    </style>
+
+    <div class="marco-teorico">
+
+    <h3>1. Ley de Hagen–Poiseuille</h3>
+    <p>Describe el caudal para un flujo laminar, incompresible y viscoso a través de un tubo cilíndrico recto de sección constante. Es el modelo fundamental de la hemodinámica en vasos sanguíneos pequeños:</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.latex(r"Q = \frac{\pi r^4 \Delta P}{8 \, \eta \, L}")
+
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>Donde: <span class="variable">Q</span> = caudal volumétrico (m³/s),
+    <span class="variable">r</span> = radio interno del vaso (m),
+    <span class="variable">ΔP</span> = diferencia de presión (Pa),
+    <span class="variable">η</span> = viscosidad dinámica (Pa·s),
+    <span class="variable">L</span> = longitud del segmento (m).</p>
+
+    <h3>2. Resistencia Vascular (Ley de Ohm Hemodinámica)</h3>
+    <p>Análoga a la resistencia eléctrica, la resistencia vascular relaciona la caída de presión con el caudal. Por Poiseuille, se puede expresar como:</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.latex(r"R = \frac{\Delta P}{Q} = \frac{8 \, \eta \, L}{\pi \, r^4}")
+
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>La dependencia cuártica en el radio (<span class="variable">R ∝ r⁻⁴</span>) implica que una reducción del 50 % en el radio aumenta la resistencia en un factor de <strong>2⁴ = 16</strong>.</p>
+
+    <h3>3. Número de Reynolds</h3>
+    <p>Cociente adimensional que permite predecir la transición entre flujo laminar y turbulento:</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.latex(r"Re = \frac{2 \rho \, v \, r}{\eta}")
+
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>Donde <span class="variable">ρ</span> = densidad del fluido (kg/m³), <span class="variable">v</span> = velocidad media (m/s).
+    Regímenes: <em>Re &lt; 2 000</em> → laminar; <em>2 000 – 4 000</em> → transicional; <em>Re &gt; 4 000</em> → turbulento.</p>
+
+    <h3>4. Modelado Geométrico de la Placa (Oclusión Gaussiana)</h3>
+    <p>Para simular la forma natural de una placa aterosclerótica, se emplea una función de decaimiento exponencial (campana de Gauss) anclada en el centro del vaso (<span class="variable">z = 0</span>):</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.latex(r"r(z) = r_{\text{base}} \left(1 - \frac{p}{100}\, e^{-z^2/(0.05\,L^2)}\right)")
+
+    st.markdown("""
+    <div class="marco-teorico">
+    <p>Donde <span class="variable">p</span> es el porcentaje máximo de estenosis.</p>
+
+    <div class="ref-biblio">
+    <strong>Referencias bibliográficas:</strong><br>
+    • Munson, B. R., Young, D. F., &amp; Okiishi, T. H. (2006). <em>Fundamentals of Fluid Mechanics</em> (5th ed.). Wiley.<br>
+    • Guyton, A. C., &amp; Hall, J. E. (2011). <em>Textbook of Medical Physiology</em> (12th ed.). Elsevier Saunders.<br>
+    • White, F. M. (2011). <em>Fluid Mechanics</em> (7th ed.). McGraw-Hill.<br>
+    • Cengel, Y. A., &amp; Cimbala, J. M. (2014). <em>Fluid Mechanics: Fundamentals and Applications</em> (3rd ed.). McGraw-Hill.
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
